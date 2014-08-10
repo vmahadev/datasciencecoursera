@@ -1,0 +1,26 @@
+require(sqldf)
+LoadData<-function()
+{
+  DTHPC<-read.csv.sql("household_power_consumption.txt",header=TRUE,sep=";",sql="select * from file where Date in ('1/2/2007','2/2/2007') ")
+  DTHPC$Global_active_power<-as.numeric(DTHPC$Global_active_power)
+  DTHPC$Global_reactive_power<-as.numeric(DTHPC$Global_reactive_power)
+  DTHPC$Voltage<-as.numeric(DTHPC$Voltage)
+  DTHPC$Dt<-as.Date(DTHPC$Date,format="%d/%m/%Y")
+  #DTHPC$DTime<-data.frame(strptime(paste0(DTHPC$Dt," ",DTHPC$Time),format="%Y-%m-%d %H:%M:%S",tz="EST"))
+  DTHPCC<-cbind(DTHPC[,],strptime(paste0(DTHPC$Dt," ",DTHPC$Time),format="%Y-%m-%d %H:%M:%S",tz="EST"))
+  colnames(DTHPCC)[11]<-"DTime"
+  if(dev.cur() == 1) dev.new()
+  par(mfrow=c(2,2))  
+  plot(DTHPCC$DTime,DTHPCC$Global_active_power,type="l",xlab="",ylab="Global Active Power (killowatts)") 
+  plot(DTHPCC$DTime,DTHPCC$Voltage,type="l",xlab="datetime",ylab="Voltage") 
+  plot(DTHPCC$DTime,DTHPCC$Sub_metering_1,type="l",xlab="",ylab="Energy sub metering",col="black")
+  lines(xy.coords(DTHPCC$DTime,DTHPCC$Sub_metering_2),type="l",col="red")
+  lines(DTHPCC$DTime,DTHPCC$Sub_metering_3,type="l",col="blue")
+  legend("topright",lty=1,col=c("black","red","blue"),
+         legend=c("Sub_metering_1","Sub_metering_2","Sub_metering_3")
+  )
+  plot(DTHPCC$DTime,DTHPCC$Global_reactive_power,type="l",col="black",xlab="datetime",ylab="Global_reactive_power")
+  dev.copy(png,file="plot4.png")
+  dev.off()
+}
+LoadData()
